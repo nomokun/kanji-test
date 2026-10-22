@@ -1,0 +1,1615 @@
+﻿<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>けいご漢字テスト大作戦</title>
+<style>
+  body {
+    font-family: sans-serif;
+    padding: 10px;
+    max-width: 620px;
+    margin: auto;
+  }
+  h1 {
+    font-size: 24px;
+    margin: 6px 0 8px;
+  }
+  .card {
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 10px;
+    margin-top: 8px;
+  }
+  .compact-card {
+    padding: 8px 10px;
+  }
+  input, button, select {
+    font-size: 17px;
+    padding: 9px;
+    margin-top: 6px;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  button {
+    cursor: pointer;
+  }
+  .mode-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  .page-row {
+    flex-wrap: nowrap;
+    gap: 6px;
+  }
+  .page-row .mode-title {
+    flex: 0 0 auto;
+  }
+  .page-row select {
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    margin-top: 0;
+    padding: 7px 6px;
+    font-size: 16px;
+  }
+  .page-separator {
+    flex: 0 0 auto;
+  }
+  .mode-title {
+    font-weight: bold;
+    margin-right: 4px;
+  }
+  .mode-label {
+    font-size: 16px;
+    white-space: nowrap;
+  }
+  .mode-label input {
+    width: auto;
+    margin: 0 4px 0 0;
+  }
+  .small {
+    font-size: 13px;
+    color: #666;
+    margin: 6px 0;
+  }
+  .status-box {
+    font-size: 14px;
+    margin-top: 6px;
+    color: #444;
+  }
+  .page-info {
+    font-size: 13px;
+    color: #555;
+    margin: 0 0 4px;
+  }
+  .recent-history {
+    font-size: 18px;
+    font-weight: bold;
+  }
+  .question-text {
+    font-size: 30px;
+    line-height: 1.35;
+    font-weight: bold;
+    margin: 4px 0;
+  }
+  .result {
+    font-size: 30px;
+    line-height: 1.35;
+    margin: 4px 0 8px;
+    font-weight: bold;
+    min-height: 40px;
+  }
+  .button-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .button-row button {
+    flex: 1;
+  }
+  .self-check-area {
+    display: none;
+  }
+  .success-button,
+  .fail-button {
+    font-weight: bold;
+  }
+  .canvas-wrap {
+    margin-top: 6px;
+  }
+  #handwritingCanvas {
+    width: 100%;
+    height: 220px;
+    border: 2px solid #333;
+    border-radius: 8px;
+    background: #fff;
+    touch-action: none;
+    box-sizing: border-box;
+    display: block;
+  }
+  .answer-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .answer-row input {
+    flex: 1.5;
+  }
+  .answer-row button {
+    flex: 1;
+  }
+  .score {
+    margin: 8px 0 0;
+    font-size: 16px;
+    line-height: 1.55;
+  }
+  .score-main {
+    font-size: 19px;
+    font-weight: bold;
+  }
+  .score-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.12em;
+  }
+  .score-label {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+  .score-value {
+    flex: 1 1 auto;
+    white-space: nowrap;
+  }
+  .count-rate-value {
+    display: inline-grid;
+    grid-template-columns: 3ch auto auto auto 4.2ch auto;
+    align-items: baseline;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .count-rate-count,
+  .count-rate-total,
+  .count-rate-rate {
+    text-align: right;
+  }
+  .daily-stats {
+    margin-top: 8px;
+    font-size: 15px;
+  }
+  .daily-stats-body {
+    margin-top: 6px;
+    line-height: 1.6;
+  }
+  .daily-stat-row {
+    display: grid;
+    grid-template-columns: 4em 1fr 1fr;
+    column-gap: 0.7em;
+    white-space: nowrap;
+  }
+  .daily-stat-date {
+    font-variant-numeric: tabular-nums;
+  }
+  .daily-stat-count {
+    font-variant-numeric: tabular-nums;
+  }
+  details {
+    margin-top: 8px;
+  }
+  summary {
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 15px;
+  }
+
+/* v2.5.0: 日別表示を横幅内に詰める */
+.daily-stats-body {
+  font-size: 0.95em;
+}
+
+.daily-stat-row {
+  display: grid;
+  grid-template-columns: 3.2em 5.5em 5.5em 1fr;
+  column-gap: 0.4em;
+  align-items: baseline;
+  white-space: nowrap;
+  margin: 0.15em 0;
+}
+
+.daily-stat-date,
+.daily-stat-count {
+  display: inline-block;
+}
+
+.daily-stat-usage {
+  text-align: left;
+}
+
+</style>
+</head>
+<body>
+<h1>けいご漢字テスト大作戦</h1>
+
+<div class="card">
+  <p id="pageInfo" class="page-info"></p>
+  <p id="historyInfo" class="page-info recent-history">直近3回: ー ー ー</p>
+  <p id="question" class="question-text">CSVを読み込んでください</p>
+  <div class="result" id="result"></div>
+
+  <div class="button-row">
+    <button onclick="showCorrectAnswer()">正解を見る</button>
+    <button onclick="nextQuestion()">次の問題</button>
+  </div>
+
+  <div class="button-row self-check-area" id="selfCheckArea">
+    <button class="success-button" onclick="markSelfCheck(true)">成功</button>
+    <button class="fail-button" onclick="markSelfCheck(false)">失敗</button>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="handwritingCanvas"></canvas>
+  </div>
+
+  <div class="button-row">
+    <button onclick="clearCanvas()">手書きを消す</button>
+  </div>
+
+  <p class="score" id="score">
+    <span class="score-row score-main"><span class="score-label">最後に正解した数：</span><span class="score-value count-rate-value"><span class="count-rate-count">000</span><span>／全</span><span class="count-rate-total">0</span><span>問：</span><span class="count-rate-rate">0.0</span><span>%</span></span></span>
+    <span class="score-row score-main"><span class="score-label">マスターした数　：</span><span class="score-value count-rate-value"><span class="count-rate-count">000</span><span>／全</span><span class="count-rate-total">0</span><span>問：</span><span class="count-rate-rate">0.0</span><span>%</span></span></span>
+    <span class="score-row"><span class="score-label">直近10問正解率：</span><span class="score-value">0.0%</span></span>
+    <span class="score-row"><span class="score-label">直近30問正解率：</span><span class="score-value">0.0%</span></span>
+  </p>
+
+  <details class="daily-stats" id="dailyStatsDetails">
+    <summary>日別の問題数・利用時間</summary>
+    <div class="daily-stats-body" id="dailyStatsBody">
+      <div class="daily-stat-row"><span class="daily-stat-date">--/--</span><span class="daily-stat-count">回答 0問</span><span class="daily-stat-count">表示 0問</span><span class="daily-stat-count daily-stat-usage">時間 0秒</span></div>
+    </div>
+  </details>
+
+  <details>
+    <summary>設定・データ保存</summary>
+    <button onclick="exportStudyData()">履歴ファイルを保存（kanji_history.json）</button>
+    <button onclick="document.getElementById('historyFile').click()">履歴ファイルを読み込む</button>
+
+    <div class="card compact-card">
+      <div class="mode-row">
+        <span class="mode-title">モード</span>
+        <label class="mode-label">
+          <input type="radio" name="mode" value="readingToKanji" checked>
+          読み→漢字
+        </label>
+        <label class="mode-label">
+          <input type="radio" name="mode" value="kanjiToReading">
+          漢字→読み
+        </label>
+      </div>
+
+      <div class="mode-row">
+        <span class="mode-title">出題</span>
+        <label class="mode-label">
+          <input type="radio" name="questionSet" value="all" checked>
+          全問題
+        </label>
+        <label class="mode-label">
+          <input type="radio" name="questionSet" value="wrongOnly">
+          間違えた問題だけ
+        </label>
+      </div>
+
+      <div class="mode-row page-row">
+        <span class="mode-title">ページ</span>
+        <select id="pageStart" title="開始ページ">
+          <option value="">全</option>
+        </select>
+        <span class="page-separator">〜</span>
+        <select id="pageEnd" title="終了ページ">
+          <option value="">全</option>
+        </select>
+      </div>
+
+      <div class="status-box" id="weightDebug">
+        CSV読込: 0問 / 抽選対象: 0問 / 重み合計: 0 / 未出題: 0 / ××: 0 / ×ー: 0 / ×〇: 0 / 〇ー: 0 / 〇×: 0 / 〇〇: 0
+      </div>
+
+      <p class="small" id="status">
+        CSVを選択してください（CSVと kanji_history.json を同時選択できます）
+      </p>
+      <input type="file" id="csvFile" accept="text/*,.csv,.json,application/json,*/*" multiple>
+
+      <div class="status-box" id="historyPrompt" style="display:none;">
+        履歴ファイル kanji_history.json がある場合は読み込めます。
+        <button onclick="document.getElementById('historyFile').click()">履歴を読み込む</button>
+      </div>
+
+      <div class="status-box" id="wrongStatus">間違えた問題: 0件</div>
+    </div>
+
+    <input type="file" id="historyFile" accept=".json,application/json" style="display:none">
+    <button onclick="resetStudyHistory()">学習履歴をリセット</button>
+  </details>
+</div>
+
+<script>
+"use strict";
+
+const STORAGE_KEY = "kanjiTestCsvData_v2_2term_v250";
+const WRONG_KEY = "kanjiTestWrongQuestionIds_v2_2term_v250";
+const HISTORY_KEY = "kanjiTestAnswerHistoryById_v2_2term_v250";
+const RECENT_KEY = "kanjiRecentResults_v2_2term_v250";
+const DAILY_KEY = "kanjiDailyAnswerCounts_v1_2term_v250";
+const DAILY_DISPLAY_KEY = "kanjiDailyDisplayCounts_v1_2term_v250";
+const DAILY_USAGE_KEY = "kanjiDailyUsageSeconds_v1_2term_v250";
+
+let questions = [];
+let wrongQuestionIds = [];
+let answerHistory = {};
+let recentResults = [];
+let dailyAnswerCounts = {};
+let dailyDisplayCounts = {};
+let dailyUsageSeconds = {};
+let currentQuestion = null;
+let answered = false;
+let autoNextTimer = null;
+let historyDirty = false;
+
+const canvas = document.getElementById("handwritingCanvas");
+const ctx = canvas.getContext("2d");
+let isDrawing = false;
+let lastX = 0;
+let lastY = 0;
+
+window.addEventListener("load", function() {
+  setupCanvas();
+  loadStudyData();
+  updateWrongStatus();
+  updateScore();
+
+  const savedCsv = localStorage.getItem(STORAGE_KEY);
+  if (savedCsv) {
+    loadCSV(savedCsv);
+    updateScore();
+    nextQuestion();
+    document.getElementById("status").textContent =
+      "前回保存したCSVを読み込みました";
+    updateSelectedFilesLabel("前回保存したCSV", "未選択");
+  } else {
+    updateSelectedFilesLabel("未選択", "未選択");
+  }
+
+  startUsageTracking();
+});
+
+window.addEventListener("resize", function() {
+  setupCanvas();
+});
+
+window.addEventListener("beforeunload", function(e) {
+  if (!historyDirty) return;
+  e.preventDefault();
+  e.returnValue =
+    "履歴が保存されていません。終了する前に「履歴ファイルを保存」を押してください。";
+});
+
+document.querySelectorAll('input[name="mode"]').forEach(function(radio) {
+  radio.addEventListener("change", resetOrderAndNextQuestion);
+});
+
+document.querySelectorAll('input[name="questionSet"]').forEach(function(radio) {
+  radio.addEventListener("change", resetOrderAndNextQuestion);
+});
+
+
+document.getElementById("pageStart").addEventListener("change", resetOrderAndNextQuestion);
+document.getElementById("pageEnd").addEventListener("change", resetOrderAndNextQuestion);
+
+
+document.getElementById("csvFile").addEventListener("change", function(event) {
+  const files = Array.from(event.target.files || []);
+  if (files.length === 0) return;
+
+  const csvFile = files.find(file => file.name.toLowerCase().endsWith(".csv"));
+  const jsonFile = files.find(file => file.name.toLowerCase().endsWith(".json"));
+
+  updateSelectedFilesLabel(
+    csvFile ? csvFile.name : "未選択",
+    jsonFile ? jsonFile.name : "未選択"
+  );
+
+  if (csvFile) {
+    readCsvFile(csvFile, function() {
+      if (jsonFile) {
+        readHistoryFile(jsonFile);
+      } else {
+        document.getElementById("status").textContent = "CSVを読み込みました";
+        document.getElementById("historyPrompt").style.display = "block";
+      }
+    });
+  } else if (jsonFile) {
+    readHistoryFile(jsonFile);
+  } else {
+    document.getElementById("status").textContent = "CSVファイルを選択してください";
+  }
+
+  setTimeout(function() {
+    event.target.value = "";
+  }, 0);
+});
+
+document.getElementById("historyFile").addEventListener("change", function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  updateSelectedFilesLabel(questions.length > 0 ? "読込済みCSV" : "未選択", file.name);
+  readHistoryFile(file);
+  setTimeout(function() {
+    event.target.value = "";
+  }, 0);
+});
+
+
+function looksLikeQuestionCsv(text) {
+  if (!text) return false;
+  const firstLine = String(text).split(/\r?\n/, 1)[0] || "";
+  const normalized = firstLine
+    .trim()
+    .replace(/^\uFEFF/, "")
+    .replace(/\s+/g, "")
+    .toLowerCase();
+
+  return (
+    normalized.includes("question") &&
+    normalized.includes("answer")
+  );
+}
+
+function updateSelectedFilesLabel(csvName, historyName) {
+  const el = document.getElementById("selectedFiles");
+  if (!el) return;
+
+  const csvLabel = csvName ? csvName : "未選択";
+  const historyLabel = historyName ? historyName : "未選択";
+  el.textContent = "選択中: CSV=" + csvLabel + " / 履歴=" + historyLabel;
+}
+
+function showCsvLoadError(message) {
+  questions = [];
+  currentQuestion = null;
+  populatePageSelectors();
+  updateWrongStatus();
+  updateWeightDebug([]);
+  document.getElementById("status").textContent = message || "CSVの読み込みに失敗しました";
+  document.getElementById("pageInfo").textContent = "";
+  document.getElementById("historyInfo").textContent = "直近3回: ー ー ー";
+  document.getElementById("question").textContent = "CSVを読み込めませんでした";
+  document.getElementById("result").textContent = "";
+  document.getElementById("selfCheckArea").style.display = "none";
+  clearCanvas();
+}
+
+function readCsvFile(file, afterLoad) {
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    try {
+      const text = decodeCsvBuffer(e.target.result);
+      localStorage.setItem(STORAGE_KEY, text);
+      loadCSV(text);
+      updateScore();
+      nextQuestion();
+
+      document.getElementById("status").textContent =
+        "CSVを読み込み、スマホ内に保存しました";
+      document.getElementById("historyPrompt").style.display = "none";
+      updateSelectedFilesLabel(file.name, "未選択");
+
+      if (afterLoad) afterLoad();
+    } catch (err) {
+      console.error(err);
+      showCsvLoadError("CSVの読み込みに失敗しました（" + (err && err.message ? err.message : "原因不明") + "）");
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+function readHistoryFile(file) {
+  const reader = new FileReader();
+
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+
+      wrongQuestionIds = Array.isArray(data.wrongQuestionIds)
+        ? data.wrongQuestionIds
+        : [];
+
+      answerHistory = data.answerHistory && typeof data.answerHistory === "object"
+        ? data.answerHistory
+        : {};
+
+      recentResults = Array.isArray(data.recentResults)
+        ? data.recentResults.map(Boolean).slice(-30)
+        : [];
+
+      dailyAnswerCounts = data.dailyAnswerCounts && typeof data.dailyAnswerCounts === "object"
+        ? normalizeDailyCounts(data.dailyAnswerCounts)
+        : {};
+
+      dailyDisplayCounts = data.dailyDisplayCounts && typeof data.dailyDisplayCounts === "object"
+        ? normalizeDailyCounts(data.dailyDisplayCounts)
+        : {};
+
+      dailyUsageSeconds = data.dailyUsageSeconds && typeof data.dailyUsageSeconds === "object"
+        ? normalizeDailyCounts(data.dailyUsageSeconds)
+        : {};
+
+      saveStudyData(false);
+      historyDirty = false;
+
+      updateWrongStatus();
+      updateHistoryDisplay();
+      updateScore();
+
+      document.getElementById("historyPrompt").style.display = "none";
+      updateSelectedFilesLabel(questions.length > 0 ? "読込済みCSV" : "未選択", file.name);
+      document.getElementById("result").textContent =
+        "履歴ファイルを読み込みました";
+    } catch (err) {
+      console.error(err);
+      document.getElementById("result").textContent =
+        "履歴ファイルの読み込みに失敗しました";
+    }
+  };
+
+  reader.readAsText(file, "UTF-8");
+}
+
+
+function decodeCsvBuffer(buffer) {
+  const bytes = new Uint8Array(buffer);
+
+  if (
+    bytes.length >= 3 &&
+    bytes[0] === 0xEF &&
+    bytes[1] === 0xBB &&
+    bytes[2] === 0xBF
+  ) {
+    return new TextDecoder("utf-8").decode(bytes);
+  }
+
+  const tryDecode = function(encoding) {
+    try {
+      return new TextDecoder(encoding).decode(bytes);
+    } catch (e) {
+      return null;
+    }
+  };
+
+  const scoreDecodedCsv = function(text) {
+    if (!looksLikeQuestionCsv(text)) return -999999;
+
+    const replacementCount = (text.match(/�/g) || []).length;
+    const japaneseCount = (text.match(/[ぁ-んァ-ン一-龯々ー]/g) || []).length;
+    const lineCount = text.split(/\r?\n/).filter(function(line) {
+      return line.trim();
+    }).length;
+
+    // 文字化けの「�」を強く減点し、日本語が多く読めている候補を優先します。
+    return japaneseCount + lineCount - replacementCount * 1000;
+  };
+
+  const candidates = [
+    { encoding: "utf-8", text: tryDecode("utf-8") },
+    { encoding: "shift_jis", text: tryDecode("shift_jis") },
+    { encoding: "shift-jis", text: tryDecode("shift-jis") },
+    { encoding: "windows-31j", text: tryDecode("windows-31j") },
+    { encoding: "ms932", text: tryDecode("ms932") }
+  ].filter(function(item) {
+    return item.text !== null;
+  });
+
+  let best = null;
+  candidates.forEach(function(item) {
+    const score = scoreDecodedCsv(item.text);
+    if (!best || score > best.score) {
+      best = { encoding: item.encoding, text: item.text, score: score };
+    }
+  });
+
+  if (best && best.score > -999999) {
+    return best.text;
+  }
+
+  throw new Error("CSVの文字コードを判定できませんでした");
+}
+
+
+function parseCsvLine(line) {
+  const result = [];
+  let current = "";
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    const nextChar = line[i + 1];
+
+    if (char === '"' && inQuotes && nextChar === '"') {
+      current += '"';
+      i++;
+    } else if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === "," && !inQuotes) {
+      result.push(current);
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+
+  result.push(current);
+  return result;
+}
+
+function loadCSV(csvText) {
+  const lines = csvText.trim().split(/\r?\n/);
+  if (lines.length < 2) {
+    questions = [];
+    return;
+  }
+
+  const header = parseCsvLine(lines[0]).map(function(h) {
+    return h.trim().replace(/^\uFEFF/, "");
+  });
+
+  questions = lines.slice(1).map(function(line, index) {
+    if (!line.trim()) return null;
+
+    const values = parseCsvLine(line).map(function(v) {
+      return v.trim();
+    });
+
+    const row = {};
+    header.forEach(function(key, i) {
+      row[key] = values[i] || "";
+    });
+
+    if (!row.question || !row.answer) return null;
+
+    return {
+      questionId: row.question_id || makeFallbackQuestionId(row, index),
+      pageNumber: row.page_number || "",
+      pageName: row.page_name || "",
+      question: row.question,
+      answer: row.answer,
+      sourceIndex: index
+    };
+  }).filter(Boolean);
+
+  if (questions.length === 0) {
+    throw new Error("CSVに有効な問題行がありません");
+  }
+
+  const unknownKindCount = questions.filter(function(q) {
+    return getQuestionKind(q) === "unknown";
+  }).length;
+
+  if (unknownKindCount > 0) {
+    throw new Error("question_id の末尾が _r / _k ではない問題が " + unknownKindCount + "件あります");
+  }
+
+  populatePageSelectors();
+  updateWrongStatus();
+  updateWeightDebug();
+  updateScore();
+}
+
+function makeFallbackQuestionId(row, index) {
+  return "legacy_" + index + "_" + (row.page_number || "") + "_" + (row.question || "");
+}
+
+function setupCanvas() {
+  const rect = canvas.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.lineWidth = 5;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#000";
+
+  clearCanvas();
+}
+
+canvas.addEventListener("pointerdown", function(e) {
+  isDrawing = true;
+  canvas.setPointerCapture(e.pointerId);
+  const pos = getCanvasPosition(e);
+  lastX = pos.x;
+  lastY = pos.y;
+});
+
+canvas.addEventListener("pointermove", function(e) {
+  if (!isDrawing) return;
+
+  const pos = getCanvasPosition(e);
+  ctx.beginPath();
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(pos.x, pos.y);
+  ctx.stroke();
+
+  lastX = pos.x;
+  lastY = pos.y;
+});
+
+canvas.addEventListener("pointerup", stopDrawing);
+canvas.addEventListener("pointercancel", stopDrawing);
+canvas.addEventListener("pointerleave", stopDrawing);
+
+function stopDrawing() {
+  isDrawing = false;
+}
+
+function getCanvasPosition(e) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top
+  };
+}
+
+function clearCanvas() {
+  const rect = canvas.getBoundingClientRect();
+
+  ctx.clearRect(0, 0, rect.width, rect.height);
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, rect.width, rect.height);
+  ctx.strokeStyle = "#000";
+}
+
+function loadStudyData() {
+  try {
+    wrongQuestionIds = JSON.parse(localStorage.getItem(WRONG_KEY)) || [];
+  } catch (e) {
+    wrongQuestionIds = [];
+  }
+
+  try {
+    answerHistory = JSON.parse(localStorage.getItem(HISTORY_KEY)) || {};
+  } catch (e) {
+    answerHistory = {};
+  }
+
+  try {
+    recentResults = JSON.parse(localStorage.getItem(RECENT_KEY)) || [];
+  } catch (e) {
+    recentResults = [];
+  }
+
+  recentResults = recentResults.map(Boolean).slice(-30);
+
+  try {
+    dailyAnswerCounts = normalizeDailyCounts(JSON.parse(localStorage.getItem(DAILY_KEY)) || {});
+  } catch (e) {
+    dailyAnswerCounts = {};
+  }
+
+  try {
+    dailyDisplayCounts = normalizeDailyCounts(JSON.parse(localStorage.getItem(DAILY_DISPLAY_KEY)) || {});
+  } catch (e) {
+    dailyDisplayCounts = {};
+  }
+
+  try {
+    dailyUsageSeconds = normalizeDailyCounts(JSON.parse(localStorage.getItem(DAILY_USAGE_KEY)) || {});
+  } catch (e) {
+    dailyUsageSeconds = {};
+  }
+}
+
+function saveStudyData(markDirty = true) {
+  localStorage.setItem(WRONG_KEY, JSON.stringify(wrongQuestionIds));
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(answerHistory));
+  localStorage.setItem(RECENT_KEY, JSON.stringify(recentResults));
+  localStorage.setItem(DAILY_KEY, JSON.stringify(dailyAnswerCounts));
+  localStorage.setItem(DAILY_DISPLAY_KEY, JSON.stringify(dailyDisplayCounts));
+  localStorage.setItem(DAILY_USAGE_KEY, JSON.stringify(dailyUsageSeconds));
+
+  if (markDirty) {
+    historyDirty = true;
+  }
+}
+
+function getQuestionKey(q) {
+  return q ? q.questionId : "";
+}
+
+function addWrongQuestion(q) {
+  const key = getQuestionKey(q);
+  if (!key) return;
+
+  if (!wrongQuestionIds.includes(key)) {
+    wrongQuestionIds.push(key);
+    saveStudyData();
+  }
+}
+
+function removeWrongQuestion(q) {
+  const key = getQuestionKey(q);
+  if (!key) return;
+
+  const beforeLength = wrongQuestionIds.length;
+  wrongQuestionIds = wrongQuestionIds.filter(function(id) {
+    return id !== key;
+  });
+
+  if (beforeLength !== wrongQuestionIds.length) {
+    saveStudyData();
+  }
+}
+
+function getLocalDateKey(date) {
+  const d = date || new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return year + "-" + month + "-" + day;
+}
+
+function addDays(date, diff) {
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function normalizeDailyCounts(raw) {
+  const result = {};
+  if (!raw || typeof raw !== "object") return result;
+
+  Object.keys(raw).forEach(function(key) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) return;
+    const value = Number(raw[key]);
+    if (!Number.isFinite(value) || value <= 0) return;
+    result[key] = Math.floor(value);
+  });
+
+  return result;
+}
+
+function pruneDailyCounts() {
+  const keepFrom = getLocalDateKey(addDays(new Date(), -30));
+  [dailyAnswerCounts, dailyDisplayCounts, dailyUsageSeconds].forEach(function(countMap) {
+    Object.keys(countMap).forEach(function(key) {
+      if (key < keepFrom) {
+        delete countMap[key];
+      }
+    });
+  });
+}
+
+
+function formatUsageTime(seconds) {
+  seconds = Math.max(0, Math.floor(Number(seconds) || 0));
+  const minutes = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    const remainMinutes = minutes % 60;
+    return hours + "時間" + remainMinutes + "分";
+  }
+  if (minutes >= 1) {
+    return minutes + "分";
+  }
+  return secs + "秒";
+}
+
+let usageTimerId = null;
+let usageLastTickMs = null;
+
+function addDailyUsageSeconds(seconds) {
+  seconds = Math.floor(Number(seconds) || 0);
+  if (seconds <= 0) return;
+
+  const key = getLocalDateKey(new Date());
+  dailyUsageSeconds[key] = (Number(dailyUsageSeconds[key]) || 0) + seconds;
+  pruneDailyCounts();
+  saveStudyData(false);
+  updateDailyStatsDisplay();
+}
+
+function usageTick() {
+  const now = Date.now();
+
+  if (usageLastTickMs && !document.hidden) {
+    const elapsed = Math.floor((now - usageLastTickMs) / 1000);
+
+    if (elapsed > 0 && elapsed <= 30) {
+      addDailyUsageSeconds(elapsed);
+    } else if (elapsed > 30) {
+      addDailyUsageSeconds(10);
+    }
+  }
+
+  usageLastTickMs = now;
+}
+
+function startUsageTracking() {
+  if (usageTimerId) return;
+  usageLastTickMs = Date.now();
+  usageTimerId = setInterval(usageTick, 10000);
+}
+
+function stopUsageTracking() {
+  if (!usageTimerId) return;
+  usageTick();
+  clearInterval(usageTimerId);
+  usageTimerId = null;
+  usageLastTickMs = null;
+}
+
+document.addEventListener("visibilitychange", function() {
+  if (document.hidden) {
+    stopUsageTracking();
+  } else {
+    startUsageTracking();
+  }
+});
+
+window.addEventListener("pagehide", stopUsageTracking);
+
+function recordDailyAnswer() {
+  const key = getLocalDateKey(new Date());
+  dailyAnswerCounts[key] = (Number(dailyAnswerCounts[key]) || 0) + 1;
+  pruneDailyCounts();
+}
+
+function recordDailyDisplay() {
+  const key = getLocalDateKey(new Date());
+  dailyDisplayCounts[key] = (Number(dailyDisplayCounts[key]) || 0) + 1;
+  pruneDailyCounts();
+  saveStudyData();
+}
+
+function formatDisplayDate(dateKey) {
+  const parts = dateKey.split("-");
+  if (parts.length !== 3) return dateKey;
+  return Number(parts[1]) + "/" + Number(parts[2]);
+}
+
+function updateDailyStatsDisplay() {
+  const el = document.getElementById("dailyStatsBody");
+  if (!el) return;
+
+  const today = new Date();
+  const rows = [];
+  for (let i = 0; i < 5; i++) {
+    const key = getLocalDateKey(addDays(today, -i));
+    const displayCount = Number(dailyDisplayCounts[key]) || 0;
+    const answerCount = Number(dailyAnswerCounts[key]) || 0;
+    const usageSeconds = Number(dailyUsageSeconds[key]) || 0;
+    rows.push(
+      '<div class="daily-stat-row"><span class="daily-stat-date">' +
+      formatDisplayDate(key) +
+      '</span><span class="daily-stat-count">回答 ' +
+      answerCount +
+      '問</span><span class="daily-stat-count">表示 ' +
+      displayCount +
+      '問</span><span class="daily-stat-count daily-stat-usage">時間 ' +
+      formatUsageTime(usageSeconds) +
+      '</span></div>'
+    );
+  }
+
+  el.innerHTML = rows.join("");
+}
+
+function addAnswerHistory(q, isCorrect) {
+  const key = getQuestionKey(q);
+  if (!key) return;
+
+  if (!answerHistory[key]) {
+    answerHistory[key] = [];
+  }
+
+  answerHistory[key].push(isCorrect ? "〇" : "×");
+
+  if (answerHistory[key].length > 3) {
+    answerHistory[key] = answerHistory[key].slice(-3);
+  }
+
+  recentResults.push(!!isCorrect);
+  if (recentResults.length > 30) {
+    recentResults = recentResults.slice(-30);
+  }
+
+  recordDailyAnswer();
+  saveStudyData();
+}
+
+function getHistoryMarks(q) {
+  const history = getQuestionHistory(q);
+  const latest = history.slice().reverse();
+
+  while (latest.length < 3) {
+    latest.push("ー");
+  }
+
+  return latest.slice(0, 3).join(" ");
+}
+
+function updateHistoryDisplay() {
+  document.getElementById("historyInfo").textContent =
+    "直近3回: " + getHistoryMarks(currentQuestion);
+}
+
+function updateWrongStatus() {
+  const existingIds = new Set(questions.map(function(q) {
+    return q.questionId;
+  }));
+
+  const visibleWrongCount = wrongQuestionIds.filter(function(id) {
+    return existingIds.size === 0 || existingIds.has(id);
+  }).length;
+
+  document.getElementById("wrongStatus").textContent =
+    "間違えた問題: " + visibleWrongCount + "件";
+}
+
+function resetOrderAndNextQuestion() {
+  nextQuestion();
+}
+
+function getPageNumberValue(q) {
+  const n = parseInt(q.pageNumber, 10);
+  return Number.isNaN(n) ? null : n;
+}
+
+function getAvailablePages() {
+  const seen = new Set();
+  const pages = [];
+
+  questions.forEach(function(q) {
+    const n = getPageNumberValue(q);
+    if (n === null || seen.has(n)) return;
+    seen.add(n);
+    pages.push(n);
+  });
+
+  return pages.sort(function(a, b) {
+    return a - b;
+  });
+}
+
+function populatePageSelectors() {
+  const pages = getAvailablePages();
+  const start = document.getElementById("pageStart");
+  const end = document.getElementById("pageEnd");
+  const prevStart = start.value;
+  const prevEnd = end.value;
+
+  start.innerHTML = '<option value="">全</option>';
+  end.innerHTML = '<option value="">全</option>';
+
+  pages.forEach(function(page) {
+    const startOption = document.createElement("option");
+    startOption.value = String(page);
+    startOption.textContent = String(page);
+    start.appendChild(startOption);
+
+    const endOption = document.createElement("option");
+    endOption.value = String(page);
+    endOption.textContent = String(page);
+    end.appendChild(endOption);
+  });
+
+  if (pages.includes(parseInt(prevStart, 10))) {
+    start.value = prevStart;
+  }
+
+  if (pages.includes(parseInt(prevEnd, 10))) {
+    end.value = prevEnd;
+  }
+}
+
+function getCurrentMode() {
+  return document.querySelector('input[name="mode"]:checked').value;
+}
+
+function getCurrentQuestionSet() {
+  return document.querySelector('input[name="questionSet"]:checked').value;
+}
+
+function getSelectedPageRange() {
+  const startValue = document.getElementById("pageStart").value;
+  const endValue = document.getElementById("pageEnd").value;
+
+  let start = startValue ? parseInt(startValue, 10) : null;
+  let end = endValue ? parseInt(endValue, 10) : null;
+
+  if (start !== null && end !== null && start > end) {
+    const tmp = start;
+    start = end;
+    end = tmp;
+  }
+
+  return { start: start, end: end };
+}
+
+function isInSelectedPageRange(q) {
+  const range = getSelectedPageRange();
+  if (range.start === null && range.end === null) return true;
+
+  const page = getPageNumberValue(q);
+  if (page === null) return false;
+
+  if (range.start !== null && page < range.start) return false;
+  if (range.end !== null && page > range.end) return false;
+
+  return true;
+}
+
+function getHighlightedText(questionText) {
+  const match = questionText.match(/【(.*?)】/);
+  return match ? match[1] : "";
+}
+
+function normalizeQuestionText(text) {
+  return String(text || "").trim().replace(/\s+/g, "");
+}
+
+function isReadingText(text) {
+  const t = normalizeQuestionText(text);
+  return /^[ぁ-んァ-ンー]+$/.test(t);
+}
+
+function hasKanji(text) {
+  return /[一-龯々〆ヵヶ]/.test(String(text || ""));
+}
+
+function getQuestionKind(q) {
+  const id = String(q && q.questionId ? q.questionId : "");
+
+  if (/_r$/.test(id)) return "readingToKanji";
+  if (/_k$/.test(id)) return "kanjiToReading";
+
+  // このアプリの標準CSVでは question_id の末尾 _r / _k を必須とします。
+  // あいまいな文字種判定は使いません。
+  return "unknown";
+}
+
+function isReadingToKanjiQuestion(q) {
+  return getQuestionKind(q) === "readingToKanji";
+}
+
+function isKanjiToReadingQuestion(q) {
+  return getQuestionKind(q) === "kanjiToReading";
+}
+
+function getWrongQuestionsFromIds() {
+  const idSet = new Set(wrongQuestionIds);
+  return questions.filter(function(q) {
+    return idSet.has(q.questionId);
+  });
+}
+
+function getFilteredQuestions() {
+  const baseQuestions =
+    getCurrentQuestionSet() === "wrongOnly"
+      ? getWrongQuestionsFromIds()
+      : questions;
+
+  const pageFilteredQuestions = baseQuestions.filter(isInSelectedPageRange);
+
+  const mode = getCurrentMode();
+
+  if (mode === "readingToKanji") {
+    return pageFilteredQuestions.filter(isReadingToKanjiQuestion);
+  }
+
+  if (mode === "kanjiToReading") {
+    return pageFilteredQuestions.filter(isKanjiToReadingQuestion);
+  }
+
+  return pageFilteredQuestions;
+}
+
+function getQuestionRandomWeight(q) {
+  const history = getQuestionHistory(q);
+
+  if (history.length === 0) return 100;
+
+  const latest = history[history.length - 1];
+  const previous = history.length >= 2 ? history[history.length - 2] : null;
+
+  if (latest === "×" && previous === "×") return 80;
+  if (latest === "×" && previous === null) return 60;
+  if (latest === "×" && previous === "〇") return 40;
+  if (latest === "〇" && previous === null) return 20;
+  if (latest === "〇" && previous === "×") return 10;
+  if (latest === "〇" && previous === "〇") return 5;
+
+  return 20;
+}
+
+function getWeightBucket(q) {
+  const history = getQuestionHistory(q);
+
+  if (history.length === 0) return "unanswered";
+
+  const latest = history[history.length - 1];
+  const previous = history.length >= 2 ? history[history.length - 2] : null;
+
+  if (latest === "×" && previous === "×") return "xx";
+  if (latest === "×" && previous === null) return "x-";
+  if (latest === "×" && previous === "〇") return "xo";
+  if (latest === "〇" && previous === null) return "o-";
+  if (latest === "〇" && previous === "×") return "ox";
+  if (latest === "〇" && previous === "〇") return "oo";
+
+  return "o-";
+}
+
+function updateWeightDebug(targetQuestions) {
+  const el = document.getElementById("weightDebug");
+  if (!el) return;
+
+  const list = Array.isArray(targetQuestions) ? targetQuestions : getFilteredQuestions();
+  const counts = {
+    unanswered: 0,
+    xx: 0,
+    "x-": 0,
+    xo: 0,
+    "o-": 0,
+    ox: 0,
+    oo: 0
+  };
+
+  let totalWeight = 0;
+
+  list.forEach(function(q) {
+    const bucket = getWeightBucket(q);
+    counts[bucket] = (counts[bucket] || 0) + 1;
+    totalWeight += getQuestionRandomWeight(q);
+  });
+
+  el.textContent =
+    "CSV読込: " + questions.length + "問" +
+    " / 抽選対象: " + list.length + "問" +
+    " / 重み合計: " + totalWeight +
+    " / 未出題: " + counts.unanswered +
+    " / ××: " + counts.xx +
+    " / ×ー: " + counts["x-"] +
+    " / ×〇: " + counts.xo +
+    " / 〇ー: " + counts["o-"] +
+    " / 〇×: " + counts.ox +
+    " / 〇〇: " + counts.oo;
+}
+
+function getNextQuestionByOrder(filteredQuestions) {
+  // v2.2: 完全な均等ランダムではなく、直近2回の正誤履歴で重み付けします。
+  // 未出題=100 / ××=80 / ×ー=60 / ×〇=40 / 〇ー=20 / 〇×=10 / 〇〇=5
+  let totalWeight = 0;
+
+  const weightedQuestions = filteredQuestions.map(function(q) {
+    const weight = getQuestionRandomWeight(q);
+    totalWeight += weight;
+    return { question: q, weight: weight };
+  });
+
+  if (totalWeight <= 0) {
+    const index = Math.floor(Math.random() * filteredQuestions.length);
+    return filteredQuestions[index];
+  }
+
+  let r = Math.random() * totalWeight;
+
+  for (const item of weightedQuestions) {
+    r -= item.weight;
+    if (r < 0) return item.question;
+  }
+
+  return weightedQuestions[weightedQuestions.length - 1].question;
+}
+
+function nextQuestion() {
+  clearAutoNextTimer();
+
+  if (questions.length === 0) {
+    currentQuestion = null;
+    document.getElementById("pageInfo").textContent = "";
+    document.getElementById("historyInfo").textContent = "直近3回: ー ー ー";
+    updateWeightDebug([]);
+    updateScore();
+    document.getElementById("question").textContent = "問題がありません";
+    document.getElementById("result").textContent = "";
+    return;
+  }
+
+  const filteredQuestions = getFilteredQuestions();
+  updateWeightDebug(filteredQuestions);
+
+  if (filteredQuestions.length === 0) {
+    currentQuestion = null;
+    document.getElementById("pageInfo").textContent = "";
+    document.getElementById("historyInfo").textContent = "直近3回: ー ー ー";
+    document.getElementById("question").textContent =
+      getCurrentQuestionSet() === "wrongOnly"
+        ? "この条件に合う間違えた問題がありません"
+        : "この条件で出題できる問題がありません";
+    document.getElementById("result").textContent = "";
+    document.getElementById("selfCheckArea").style.display = "none";
+    clearCanvas();
+    updateScore();
+    return;
+  }
+
+  currentQuestion = getNextQuestionByOrder(filteredQuestions);
+  recordDailyDisplay();
+  answered = false;
+
+  document.getElementById("pageInfo").textContent =
+    currentQuestion.pageNumber || currentQuestion.pageName
+      ? "P." + currentQuestion.pageNumber + " " + currentQuestion.pageName + " / " + currentQuestion.questionId
+      : currentQuestion.questionId;
+
+  document.getElementById("question").innerHTML =
+    currentQuestion.question.replace(/【(.*?)】/g, "<strong>【$1】</strong>");
+
+  updateHistoryDisplay();
+
+  const answerInput = document.getElementById("answerInput");
+  if (answerInput) answerInput.value = "";
+  document.getElementById("result").textContent = "";
+  document.getElementById("selfCheckArea").style.display = "none";
+  clearCanvas();
+  updateScore();
+}
+
+function checkAnswer() {
+  if (!currentQuestion || answered) return;
+
+  const answerInput = document.getElementById("answerInput");
+  const userAnswer = answerInput ? answerInput.value.trim() : "";
+
+  if (userAnswer === currentQuestion.answer) {
+    document.getElementById("result").textContent = "正解！";
+    removeWrongQuestion(currentQuestion);
+    addAnswerHistory(currentQuestion, true);
+    updateHistoryDisplay();
+    updateScore();
+    scheduleNextQuestion();
+  } else {
+    document.getElementById("result").textContent =
+      "不正解。正解は「" + currentQuestion.answer + "」";
+    addWrongQuestion(currentQuestion);
+    addAnswerHistory(currentQuestion, false);
+    updateHistoryDisplay();
+    updateScore();
+  }
+
+  answered = true;
+}
+
+function showCorrectAnswer() {
+  if (!currentQuestion || answered) return;
+
+  document.getElementById("result").textContent =
+    "正解は「" + currentQuestion.answer + "」";
+
+  document.getElementById("selfCheckArea").style.display = "flex";
+}
+
+function markSelfCheck(isSuccess) {
+  if (!currentQuestion || answered) return;
+
+  if (isSuccess) {
+    removeWrongQuestion(currentQuestion);
+    addAnswerHistory(currentQuestion, true);
+    updateHistoryDisplay();
+    document.getElementById("result").textContent =
+      "成功！ 次の問題へ進みます";
+  } else {
+    addWrongQuestion(currentQuestion);
+    addAnswerHistory(currentQuestion, false);
+    updateHistoryDisplay();
+    document.getElementById("result").textContent =
+      "失敗。次の問題へ進みます。正解：「" + currentQuestion.answer + "」";
+  }
+
+  answered = true;
+  document.getElementById("selfCheckArea").style.display = "none";
+  updateWrongStatus();
+  updateScore();
+  scheduleNextQuestion();
+}
+
+function scheduleNextQuestion() {
+  clearAutoNextTimer();
+  autoNextTimer = setTimeout(function() {
+    nextQuestion();
+  }, 900);
+}
+
+function clearAutoNextTimer() {
+  if (autoNextTimer) {
+    clearTimeout(autoNextTimer);
+    autoNextTimer = null;
+  }
+}
+
+function recentRate(n) {
+  const arr = recentResults.slice(-n);
+  if (arr.length === 0) return "0.0";
+
+  const correct = arr.filter(Boolean).length;
+  return ((correct / arr.length) * 100).toFixed(1);
+}
+
+function currentStreak() {
+  let streak = 0;
+
+  for (let i = recentResults.length - 1; i >= 0; i--) {
+    if (recentResults[i]) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+
+  return streak;
+}
+
+function getQuestionHistory(q) {
+  if (!q) return [];
+
+  // 通常は question_id で履歴を引きます。
+  // 旧版や手作業編集CSVでIDがずれた場合に備えて、
+  // fallback ID / 問題文 / 問題文+答え でも拾えるようにします。
+  const candidates = [
+    q.questionId,
+    makeFallbackQuestionId(q, q.sourceIndex || 0),
+    q.question,
+    q.question + "|" + q.answer
+  ].filter(Boolean);
+
+  for (const key of candidates) {
+    const history = answerHistory[key];
+    if (Array.isArray(history)) return history;
+  }
+
+  return [];
+}
+
+function getLastCorrectCount(targetQuestions) {
+  const list = Array.isArray(targetQuestions) ? targetQuestions : getFilteredQuestions();
+  let count = 0;
+
+  for (const q of list) {
+    const history = getQuestionHistory(q);
+    if (history.length > 0 && history[history.length - 1] === "〇") {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+function getMasteredCount(targetQuestions) {
+  const list = Array.isArray(targetQuestions) ? targetQuestions : getFilteredQuestions();
+  let count = 0;
+
+  for (const q of list) {
+    const history = getQuestionHistory(q);
+    if (
+      history.length >= 2 &&
+      history[history.length - 1] === "〇" &&
+      history[history.length - 2] === "〇"
+    ) {
+      count++;
+    }
+  }
+
+  return count;
+}
+
+function formatCountRate(count, total) {
+  const rate = total > 0 ? (count / total * 100).toFixed(1) : "0.0";
+  const paddedCount = String(Math.min(count, 999)).padStart(3, "0");
+  return '<span class="count-rate-count">' + paddedCount + '</span>' +
+    '<span>／全</span>' +
+    '<span class="count-rate-total">' + total + '</span>' +
+    '<span>問：</span>' +
+    '<span class="count-rate-rate">' + rate + '</span>' +
+    '<span>%</span>';
+}
+
+function updateScore() {
+  updateDailyStatsDisplay();
+
+  const targetQuestions = getFilteredQuestions();
+  const total = targetQuestions.length;
+  const lastCorrectCount = getLastCorrectCount(targetQuestions);
+  const masteredCount = getMasteredCount(targetQuestions);
+
+  document.getElementById("score").innerHTML =
+    '<span class="score-row score-main"><span class="score-label">最後に正解した数：</span><span class="score-value count-rate-value">' + formatCountRate(lastCorrectCount, total) + '</span></span>' +
+    '<span class="score-row score-main"><span class="score-label">マスターした数　：</span><span class="score-value count-rate-value">' + formatCountRate(masteredCount, total) + '</span></span>' +
+    '<span class="score-row"><span class="score-label">直近10問正解率：</span><span class="score-value">' + recentRate(10) + '%</span></span>' +
+    '<span class="score-row"><span class="score-label">直近30問正解率：</span><span class="score-value">' + recentRate(30) + '%</span></span>';
+}
+
+function exportStudyData() {
+  const data = {
+    version: 4,
+    exportedAt: new Date().toISOString(),
+    wrongQuestionIds: wrongQuestionIds,
+    answerHistory: answerHistory,
+    recentResults: recentResults,
+    dailyAnswerCounts: dailyAnswerCounts,
+    dailyDisplayCounts: dailyDisplayCounts,
+    dailyUsageSeconds: dailyUsageSeconds
+  };
+
+  const blob = new Blob(
+    [JSON.stringify(data, null, 2)],
+    { type: "application/json" }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+
+  a.href = url;
+  a.download = "kanji_history.json";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  URL.revokeObjectURL(url);
+  historyDirty = false;
+
+  document.getElementById("result").textContent =
+    "履歴ファイルを保存しました";
+}
+
+function resetStudyHistory() {
+  if (
+    !confirm(
+      "学習履歴をリセットしますか？\n正誤履歴と間違えた問題リストが削除されます。"
+    )
+  ) {
+    return;
+  }
+
+  wrongQuestionIds = [];
+  answerHistory = {};
+  recentResults = [];
+  dailyAnswerCounts = {};
+  dailyDisplayCounts = {};
+  dailyUsageSeconds = {};
+
+  localStorage.removeItem(WRONG_KEY);
+  localStorage.removeItem(HISTORY_KEY);
+  localStorage.removeItem(RECENT_KEY);
+  localStorage.removeItem(DAILY_KEY);
+  localStorage.removeItem(DAILY_DISPLAY_KEY);
+  localStorage.removeItem(DAILY_USAGE_KEY);
+
+  historyDirty = true;
+
+  updateWrongStatus();
+  updateHistoryDisplay();
+  updateScore();
+
+  document.getElementById("result").textContent =
+    "学習履歴をリセットしました";
+}
+
+</script>
+</body>
+</html>
