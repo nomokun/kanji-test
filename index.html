@@ -205,7 +205,7 @@
     font-size: 15px;
   }
 
-/* v2.5.1: 日別表示を横幅内に詰める */
+/* v2.5.4: 日別表示を横幅内に詰める */
 .daily-stats-body {
   font-size: 0.95em;
 }
@@ -729,6 +729,10 @@ function loadCSV(csvText) {
       pageName: row.page_name || "",
       question: row.question,
       answer: row.answer,
+      // enabled列：省略時は有効。0 / false / off / no / 無効 は出題しない。
+      enabled: !["0", "false", "off", "no", "無効"].includes(
+        String(row.enabled === undefined ? "1" : row.enabled).trim().toLowerCase()
+      ),
       sourceIndex: index
     };
   }).filter(Boolean);
@@ -1093,7 +1097,9 @@ function updateHistoryDisplay() {
 }
 
 function updateWrongStatus() {
-  const existingIds = new Set(questions.map(function(q) {
+  const existingIds = new Set(questions.filter(function(q) {
+    return q.enabled !== false;
+  }).map(function(q) {
     return q.questionId;
   }));
 
@@ -1118,7 +1124,7 @@ function getAvailablePages() {
   const seen = new Set();
   const pages = [];
 
-  questions.forEach(function(q) {
+  questions.filter(function(q) { return q.enabled !== false; }).forEach(function(q) {
     const n = getPageNumberValue(q);
     if (n === null || seen.has(n)) return;
     seen.add(n);
@@ -1238,7 +1244,7 @@ function isKanjiToReadingQuestion(q) {
 function getWrongQuestionsFromIds() {
   const idSet = new Set(wrongQuestionIds);
   return questions.filter(function(q) {
-    return idSet.has(q.questionId);
+    return q.enabled !== false && idSet.has(q.questionId);
   });
 }
 
@@ -1248,7 +1254,10 @@ function getFilteredQuestions() {
       ? getWrongQuestionsFromIds()
       : questions;
 
-  const pageFilteredQuestions = baseQuestions.filter(isInSelectedPageRange);
+  // 無効な問題は、全問題・間違えた問題・読み書きの全モードで除外する。
+  const pageFilteredQuestions = baseQuestions.filter(function(q) {
+    return q.enabled !== false && isInSelectedPageRange(q);
+  });
 
   const mode = getCurrentMode();
 
@@ -1323,7 +1332,8 @@ function updateWeightDebug(targetQuestions) {
   });
 
   el.textContent =
-    "CSV読込: " + questions.length + "問" +
+    "CSV読込: " + questions.length + "問（有効" +
+    questions.filter(function(q) { return q.enabled !== false; }).length + "問）" +
     " / 抽選対象: " + list.length + "問" +
     " / 重み合計: " + totalWeight +
     " / 未出題: " + counts.unanswered +
